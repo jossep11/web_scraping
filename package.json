@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "nodemon": "^2.0.15",
+    "puppeteer": "^13.3.2"
+  },
+  "scripts": {
+    "dev": "nodemon index.js"
+  }
+}
