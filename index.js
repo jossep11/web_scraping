@@ -18,11 +18,10 @@ const puppeteer = require("puppeteer");
       return element && element.textContent; // will return undefined if the element is not found
     });
     console.log(text);
+    await browser.close();
   } catch (error) {
     console.log(error, error.response);
   }
-
-  await browser.close();
 })();
 
 // const puppeteer = require('puppeteer');
