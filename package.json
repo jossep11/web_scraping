@@ -1,6 +1,8 @@
 {
   "dependencies": {
     "axios": "^0.26.0",
+    "dotenv": "^16.0.0",
+    "excel4node": "^1.7.2",
     "nodemon": "^2.0.15",
     "puppeteer": "^13.3.2",
     "request": "^2.88.2"

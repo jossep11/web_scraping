@@ -1,106 +1,77 @@
 const puppeteer = require("puppeteer");
-const { download } = require("./Downloader");
-const Downloader = require("./Downloader");
-const path = require("path");
-const axios = require("axios");
-const https = require("https");
+const excel = require("excel4node");
+require("dotenv").config();
 
-const fs = require("fs");
+const excelObject = new excel.Workbook();
+let hoja = excelObject.addWorksheet("data");
 
 (async () => {
-  const browser = await puppeteer.launch({ headless: false });
-  const page = await browser.newPage();
-  const pathdw = path.resolve("./downloadss");
-  // const responsex = await axios.get(
-  //   "https://www.alfa.srolatino-servers.com/assets/images/slide-1-min.png"
-  // );
-  // page.on("response", async (response) => {
-  //   const url = response.url();
-  //   if (responsex) {
-  //     response.buffer().then((file) => {
-  //       const fileName = url.split("/").pop();
-  //       const filePath = path.resolve("downloadss", fileName);
-  //       const writeStream = fs.createWriteStream(filePath);
-  //       writeStream.write(file);
-  //       console.log(file);
-  //     });
-  //   }
-  //   const urlx = responsex.data.url();
-  //   console.log(urlx);
-  //   const newFile = Buffer.from(responsex.data);
-  //   const filePath = path.resolve("downloadss", "fileName.png");
-  //   const writeStream = fs.createWriteStream(filePath);
-  //   writeStream.write(newFile);
-  //   // console.log(newFile);
-  // });
+  try {
+    const browser = await puppeteer.launch({});
+    const page = await browser.newPage();
+    await page.goto(
+      "https://billing.osnetpr.com/admin/reports/report_payments_received_detail.php",
+      {
+        waitUntil: "networkidle2",
+      }
+    );
 
-  // await page.goto(
-  //   "https://www.alfa.srolatino-servers.com/assets/images/slide-1-min.png",
-  //   {
-  //     waitUntil: "networkidle2",
-  //   }
-  // );
-
-  //this is the one
-  // await page.goto("https://checklyhq.com/");
-  // const imageHref = await page.evaluate((sel) => {
-  //   return document.querySelector(sel).getAttribute("src").replace("/", "");
-  // }, "#landing > section.hero-section > div > div:nth-child(2) > div > picture > img");
-
-  // const viewSource = await page.goto("https://checklyhq.com/" + imageHref);
-  // const buffer = await viewSource.buffer();
-  // if (buffer) {
-  //   const filePath = path.resolve("downloadss", "checkly.png");
-  //   const writeStream = fs.createWriteStream(filePath);
-  //   writeStream.write(buffer);
-  //   console.log(buffer);
-  // }
-  // // await writeFileAsync(path.join(__dirname, "checkly.png"), buffer);
-
-  // await page._client.send("Page.setDownloadBehavior", {
-  //   behavior: "allow",
-  //   downloadPath: pathdw,
-  // });
-
-  // await page.goto("https://elestudiantedigital.com/libros-pdf/");
-  // const imageHref = await page.evaluate((sel) => {
-  //   return document.querySelector(sel).getAttribute("src").replace("/", "");
-  // }, "#tablepress-17 > tbody > tr.row-2.even > td.column-2 > a");
-
-  const viewSource = await axios.get(
-    "https://download1521.mediafire.com/ga0ljdv35vxg/6u5cn88rg625tbo/hl.rar"
-  );
-  // const buffer = await viewSource.buffer();
-  var file = fs.createWriteStream("h.rar");
-  var request = https.get(
-    "https://download1521.mediafire.com/ga0ljdv35vxg/6u5cn88rg625tbo/hl.rar",
-    function (response) {
-      response.pipe(file);
-    }
-  );
-  // await writeFileAsync(path.join(__dirname, "checkly.png"), buffer);
-
-  await page._client.send("Page.setDownloadBehavior", {
-    behavior: "allow",
-    downloadPath: pathdw,
-  });
-
-  // const newFile = Buffer.from(await response.data);
-
-  /**
-  const browser = await puppeteer.launch();
-  const page = await browser.newPage();
-  page.on("response", async (response) => {
-    const url = response.url();
-    if (response.request().resourceType() === "image") {
-      response.buffer().then((file) => {
-        const fileName = url.split("/").pop();
-        const filePath = path.resolve("downloadss", fileName);
-        const writeStream = fs.createWriteStream(filePath);
-        writeStream.write(file);
+    await page.type("#login", process.env.user);
+    await page.type("#pass", process.env.pass);
+    await page.click("#logclick");
+    setTimeout(async () => {
+      const ThData = await page.evaluate(() => {
+        const ths = Array.from(
+          document.querySelectorAll(
+            "#reports_panel_box > div.panel-content > table > tbody > tr:nth-child(2) > td > table.table-body > tbody > tr.header > th"
+          )
+        );
+        return ths.map((th) => th.textContent.replace(/(\n)|(\t)+/g, ""));
       });
-    }
-  });
-  await page.goto("https://memeculture69.tumblr.com/");
-  await browser.close(); */
+      console.log(ThData);
+      let contadorColumnas1 = 1;
+      //loop of the th header
+      ThData.forEach((element, index) => {
+        hoja.cell(1, index + contadorColumnas1).string(element);
+      });
+
+      const TdData = await page.evaluate(() => {
+        const tds = Array.from(
+          document.querySelectorAll(
+            "#reports_panel_box > div.panel-content > table > tbody > tr:nth-child(2) > td > table.table-body > tbody > tr > td"
+          )
+        );
+        return tds.map((td) => td.textContent.replace(/(\n)|(\t)+/g, ""));
+      });
+      let newarray = [];
+      TdData.forEach((element, index) => {
+        newarray.push(element);
+      });
+      let contadorColumnas2 = 1;
+      let contadorFilas2 = 2;
+
+      newarray.forEach((element, index) => {
+        if (index >= 0) {
+          hoja.cell(contadorFilas2, contadorColumnas2).string(element);
+          if (contadorColumnas2 == 12) {
+            contadorColumnas2 = 0;
+            contadorFilas2 = contadorFilas2 + 1;
+          }
+        }
+        contadorColumnas2 = contadorColumnas2 + 1;
+      });
+      //CREANDO EL ARCHIVO
+      excelObject.write("./excel.xlsx", function (error, stats) {
+        if (error) {
+          console.log("ERROR - ", error.message);
+          // res.status(500).json(`Ocurrio un problema con el servidor ${error.message}`).end();
+        } else {
+          console.log("done!");
+        }
+      });
+      //     // file.write(JSON.stringify(standings));
+    }, 5000);
+  } catch (error) {
+    console.log(error, error.response);
+  }
 })();
